@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
 1.0.0 - @tomw - Initial release.
 
 */
@@ -119,8 +120,6 @@ def refresh()
         queryDevice()
         fetchUsageAlerts()
         
-        runIn((60 * refreshInterval).toFloat().toInteger(), refresh)
-        
         sendEvent(name: "commStatus", value: "good")
     }
     catch (Exception e)
@@ -130,6 +129,9 @@ def refresh()
         
         sendEvent(name: "commStatus", value: "error")
     }
+    
+    // always schedule next refresh
+    runIn((60 * refreshInterval).toFloat().toInteger(), refresh)
 }
 
 def getTokens()
