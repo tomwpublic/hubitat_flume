@@ -17,7 +17,7 @@ Special thanks to @jpalovick for their testing and feedback.
     * The refresh interval in minutes
         * Note that there is a documented limit of 120 API accesses per hour, and each device refresh or action is at least one access.  Set this number accordingly.
     * Choose your preferred option for the *Use sliding time windows* option
-        * If set to disabled, the data will be similar to the Flume app reporting which are aligned to specific days or dates as the start of the time period (e.g. Sunday; first day of calendar month; first minute of the current hour)
+        * If set to disabled, the data will be similar to the Flume app reporting which are aligned to specific days or dates as the start of the time period (e.g. Monday as start of the current week; first day of calendar month; first minute of the current hour)
         * If enabled, the time periods will represent a sliding window from the time of query.  Examples: last hour is the 60 minutes preceding the time of query; last month is the 30 days preceding the time of query
 
 # Usage instructions:
