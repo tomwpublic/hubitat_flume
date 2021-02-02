@@ -265,7 +265,7 @@ def queryDevice()
     def resp = httpExec("POST", genParamsMain("users/${getUserId()}/devices/${getDevices()[0]?.id}/query", query), true)?.data
     if(resp)
     {
-        logDebug("$resp.data[0]")
+        logDebug("${resp.data}")
         sendEvent(name: "usageLastMinute", value: (resp.data[0]?.lastMin && (resp.data[0]?.lastMin?.size() > 0)) ? resp.data[0].lastMin.getAt(resp.data[0].lastMin.size() - 1)?.value?.toFloat().round(2) : "n/a")
         sendEvent(name: "usageLastHour", value: (resp.data[0]?.lastHour && (resp.data[0]?.lastHour?.size() > 0)) ? resp.data[0].lastHour.getAt(resp.data[0].lastHour.size() - 1)?.value?.toFloat().round(2) : "n/a")
         sendEvent(name: "usageLastDay", value: (resp.data[0]?.lastDay && (resp.data[0]?.lastDay?.size() > 0)) ? resp.data[0].lastDay.getAt(resp.data[0].lastDay.size() - 1)?.value?.toFloat().round(2) : "n/a")
