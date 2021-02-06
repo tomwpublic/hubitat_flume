@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.0.2 - @tomw - User feedback: improved notification handling.
 1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
 1.0.0 - @tomw - Initial release.
 
