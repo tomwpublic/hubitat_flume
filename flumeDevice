@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.0.2 - @tomw - User feedback: improved notification handling.
 1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
 1.0.0 - @tomw - Initial release.
 
@@ -44,7 +45,7 @@ metadata
         attribute "usageLastWeek", "string"
         attribute "usageLastMonth", "string"
         
-        attribute "alertStream", "string"
+        attribute "notificationStream", "string"
     }
 }
 
@@ -119,6 +120,7 @@ def refresh()
         
         queryDevice()
         fetchUsageAlerts()
+        fetchNotifications()
         
         sendEvent(name: "commStatus", value: "good")
     }
@@ -174,6 +176,35 @@ def fetchLocations()
     }
 }
 
+def fetchNotifications()
+{
+    def tempCount = getNotifCount() ?: 0
+    
+    def queryString = "?limit=100&offset=${tempCount}&sort_direction=ASC&flume_leak=true"
+    def resp = httpExec("GET", genParamsMain("users/${getUserId()}/notifications/${queryString}"), true)?.data
+    logDebug("fetchNotifications resp = ${resp}")
+    
+    if(resp.data)
+    {
+        for(notification in resp.data)
+        {
+            tempCount++
+            sendEvent(name: "notificationStream", value: "[${notification.created_datetime}]: ${notification.message}", isStateChange: true)
+        }
+        setNotifCount(tempCount)
+    }
+}
+
+def setNotifCount(count)
+{
+    state.notifCount = count
+}
+
+def getNotifCount()
+{
+    return state.notifCount
+}
+
 def fetchUsageAlerts()
 {
     def tempCount = getAlertCount() ?: 0
@@ -187,8 +218,8 @@ def fetchUsageAlerts()
         for(alert in resp.data)
         {
             tempCount++
-            sendEvent(name: "alertStream", value: alert, isStateChange: true)
-            
+                
+            // check for Flume Smart Leak alerts            
             if(true == alert.flume_leak)
             {
                 sendEvent(name: "water", value: "wet")
@@ -441,7 +472,7 @@ def getLocations()
 
 def httpGetExec(params, throwToCaller = false)
 {
-    //logDebug("httpGetExec(${params})")
+    logDebug("httpGetExec(${params})")
     
     try
     {
