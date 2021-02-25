@@ -25,6 +25,7 @@ Special thanks to @jpalovick for their testing and feedback.
 * On each driver *refresh*, all of the usage details are updated.  Also, usage alerts are queried and logged as described here:
     * For usage alerts related to normal conditions (e.g. "High Flow" usage alert), the full alert text is logged via an entry in the *alertStream* attribute.
     * For Flume Smart Leak alerts, the *water* attribute will be marked wet.  Once you have handled this event accordingly, clear the condition with the *clearWetStatus* custom command on the device.
+    * The *presence* attribute will reflect the status of away_mode for the system.
     
 # Disclaimer
 
