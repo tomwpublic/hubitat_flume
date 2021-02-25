@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.
 1.0.2 - @tomw - User feedback: improved notification handling.
 1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
 1.0.0 - @tomw - Initial release.
@@ -30,6 +31,7 @@ metadata
     {
         capability "Configuration"
         capability "Initialize"
+        capability "PresenceSensor"
         capability "Refresh"
         capability "WaterSensor"
         
@@ -93,7 +95,7 @@ def configure()
         
         setAlertCount(0)
         
-        initialize()
+        initialize(false)
         
         sendEvent(name: "commStatus", value: "good")
     }
@@ -108,6 +110,16 @@ def configure()
 
 def initialize()
 {
+    initialize(true)
+}
+
+def initialize(doGetTokens)
+{
+    if(doGetTokens)
+    {
+        getTokens()
+    }
+        
     clearWetStatus()
     refresh()    
 }
@@ -121,6 +133,7 @@ def refresh()
         queryDevice()
         fetchUsageAlerts()
         fetchNotifications()
+        fetchLocations()
         
         sendEvent(name: "commStatus", value: "good")
     }
@@ -173,6 +186,7 @@ def fetchLocations()
     if(resp)
     {
         setLocations(resp.data)
+        sendEvent(name: "presence", value: resp.data?.getAt(0)?.away_mode ? "not present" : "present")
     }
 }
 
