@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.1.1 - @tomw - Better handling for notifications when old notifications were deleted by the Flume app.
 1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.
 1.0.2 - @tomw - User feedback: improved notification handling.
 1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
@@ -192,18 +193,42 @@ def fetchLocations()
 
 def fetchNotifications()
 {
-    def tempCount = getNotifCount() ?: 0
-    
-    def queryString = "?limit=100&offset=${tempCount}&sort_direction=ASC&flume_leak=true"
+    def queryString = "?limit=1000&sort_direction=ASC&flume_leak=true"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/notifications/${queryString}"), true)?.data
     logDebug("fetchNotifications resp = ${resp}")
     
-    if(resp.data)
+    if(resp?.data)
     {
+        def tempCount = getNotifCount() ?: 0
+        
+        if(resp.data.size() >= tempCount)
+        {
+            // this is a typical state; 
+            //   there are at least as many notifications as we think we already have read
+            
+            // hack the known ones off of the beginning, then process the rest
+            for(i = 0; i < tempCount; i++)
+            {
+                resp.data.remove(0)
+            }            
+        }
+        else
+        {
+            // less are in the notification than we think we already have read,
+            //  so they must have been cleared in the app
+            
+            // reset count and process them all to catch up
+            tempCount = 0
+        }
+        
         for(notification in resp.data)
         {
             tempCount++
+            
             sendEvent(name: "notificationStream", value: "[${notification.created_datetime}]: ${notification.message}", isStateChange: true)
+            
+            // short pause to try to keep them sequential in the event log
+            pauseExecution(10)
         }
         setNotifCount(tempCount)
     }
@@ -596,5 +621,6 @@ def httpExec(operation, params, throwToCaller = false)
             break
     }
     
+    logDebug("X-RateLimit-Remaining is ${res.headers['X-RateLimit-Remaining']?.value}")
     return res
 }
