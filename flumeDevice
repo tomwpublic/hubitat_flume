@@ -42,11 +42,11 @@ metadata
         
         attribute "commStatus", "string"
         
-        attribute "usageLastMinute", "string"
-        attribute "usageLastHour", "string"
-        attribute "usageLastDay", "string"
-        attribute "usageLastWeek", "string"
-        attribute "usageLastMonth", "string"
+        attribute "usageLastMinute", "number"
+        attribute "usageLastHour", "number"
+        attribute "usageLastDay", "number"
+        attribute "usageLastWeek", "number"
+        attribute "usageLastMonth", "number"
         
         attribute "notificationStream", "string"
     }
