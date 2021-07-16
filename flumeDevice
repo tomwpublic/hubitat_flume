@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.1.2 - @robertcraft - Change usage attributes to Number 
 1.1.1 - @tomw - Better handling for notifications when old notifications were deleted by the Flume app.
 1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.
 1.0.2 - @tomw - User feedback: improved notification handling.
