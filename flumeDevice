@@ -18,13 +18,13 @@ limitations under the License.
 
 Change history:
 
-1.2.0 - @cgmckeever - Added user-configurable flow detection and alarming.
-1.1.2 - @robertcraft - Change usage attributes to Number 
-1.1.1 - @tomw - Better handling for notifications when old notifications were deleted by the Flume app.
-1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.
-1.0.2 - @tomw - User feedback: improved notification handling.
-1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
-1.0.0 - @tomw - Initial release.
+1.2.0 - cgmckeever - Added user-configurable flow detection and alarming.
+1.1.2 - robertcraft - Change usage attributes to Number 
+1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
+1.1.0 - tomw - Added PresenceSensor to represent away_mode status.
+1.0.2 - tomw - User feedback: improved notification handling.
+1.0.1 - tomw - Improved next Refresh scheduling for better reliability.
+1.0.0 - tomw - Initial release.
 
 */
 
@@ -391,13 +391,15 @@ def queryDevice()
             continuousFlowReading = device.currentValue("continuousFlowReadings") == null ? 1 : device.currentValue("continuousFlowReadings") + 1
             sendEvent(name: "continuousFlowReadings", value: continuousFlowReading)
 
-            if (flowAlarmTrigger > 0 && continuousFlowReading >= flowAlarmTrigger) {
+            if (flowAlarmTrigger > 0 && continuousFlowReading >= flowAlarmTrigger)
+            {
                 sendEvent(name: "water", value: "wet")
             }
-        } else {
+        }
+        else
+        {
             sendEvent(name: "continuousFlowReadings", value: 0)
         }
-
     }
 }
 
