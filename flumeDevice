@@ -321,6 +321,9 @@ def queryDevice()
 
     nowMin = now.format('yyyy-MM-dd HH:mm:00')
 
+    // make sure to check for missing setting (pre-1.2.0 update)
+    flowAlarmLookback = flowAlarmLookback ?: 5
+    
     alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
     qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN", group_multiplier: flowAlarmLookback]
 
