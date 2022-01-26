@@ -90,6 +90,13 @@ def logDebug(msg)
     }
 }
 
+def errorLine(error)
+{
+    String str= error.getStackTrace().toString()
+    def pattern = ( str =~ /groovy.(\d+)./  )
+    return pattern[0][1]
+}
+
 def updated()
 {
     configure()
@@ -115,7 +122,8 @@ def configure()
     }
     catch (Exception e)
     {
-        logDebug("error: ${e.message}")
+        errorLine = errorLine(e)
+        log.error("error: ${e.message} @ Line: ${errorLine}")
         //logDebug("status = ${e.getResponse()?.getStatus()}")
 
         sendEvent(name: "commStatus", value: "error")
@@ -153,7 +161,8 @@ def refresh()
     }
     catch (Exception e)
     {
-        log.error("error: ${e.message}")
+        errorLine = errorLine(e)
+        log.error("error: ${e.message} @ Line: ${errorLine}")
         //log.error("status = ${e.getResponse()?.getStatus()}")
 
         sendEvent(name: "commStatus", value: "error")
@@ -288,7 +297,8 @@ def setLastPollTS()
 
 def getLastPollTS()
 {
-    return state.lastPollTS
+    lastPoll = state.lastPollTS == null ? 0 : state.lastPollTS.toInteger()
+    return lastPoll
 }
 
 def setAlertCount(count)
@@ -309,32 +319,32 @@ def queryDevice()
     def nowMin, minAgo, hourAgo, yesterday, lastWeek, lastMonth, alertLookback
     def qMin, qHour, qDay, qWeek, qMonth, qAlertLookback
 
+    nowMin = now.format('yyyy-MM-dd HH:mm:00')
+
+    alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
+    qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN", group_multiplier: flowAlarmLookback]
+
     if(slidingWindow)
     {
-        nowMin = now.format('yyyy-MM-dd HH:mm:00')
         minAgo = new Date(now.getTime() - (60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         hourAgo = new Date(now.getTime() - (60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         lastWeek = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         lastMonth = new Date(now.getTime() - ((30 * 24 * 60 * 60 * 1000) & 0xffffffffL)).format('yyyy-MM-dd HH:mm:00')
-        alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
 
         qMin = [request_id: "lastMin", since_datetime: minAgo, until_datetime: nowMin, bucket: "MIN"]
         qHour = [request_id: "lastHour", since_datetime: hourAgo, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60]
         qDay = [request_id: "lastDay", since_datetime: yesterday, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60 * 24]
         qWeek = [request_id: "lastWeek", since_datetime: lastWeek, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60 * 24 * 7]
         qMonth = [request_id: "lastMonth", since_datetime: lastMonth, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60 * 24 * 30]
-        qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN"]
     }
     else
     {
-        nowMin = now.format('yyyy-MM-dd HH:mm:00')
         // MIN doesn't respond for a minute in progress, so go one minute ago for real
         minAgo = new Date(now.getTime() - 60000).format('yyyy-MM-dd HH:mm:00')
         hourAgo = new Date(now.getTime()).format('yyyy-MM-dd HH:00:00')
         yesterday = new Date(now.getTime()).format('yyyy-MM-dd 00:00:00')
         lastMonth = new Date(now.getTime()).format('yyyy-MM-01 00:00:00')
-        alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
 
         // temp value, need to round to Sunday
         def lastWeekRaw = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000))
@@ -356,7 +366,6 @@ def queryDevice()
         qDay = [request_id: "lastDay", since_datetime: yesterday, until_datetime: nowMin, bucket: "DAY"]
         qWeek = [request_id: "lastWeek", since_datetime: lastWeek, until_datetime: nowMin, bucket: "DAY", group_multiplier: wkMult]
         qMonth = [request_id: "lastMonth", since_datetime: lastMonth, until_datetime: nowMin, bucket: "MON"]
-        qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN"]
     }
 
     def query = new groovy.json.JsonOutput().toJson([queries: [qMin, qHour, qDay, qWeek, qMonth, qAlertLookback]])
