@@ -18,8 +18,9 @@ limitations under the License.
 
 Change history:
 
+1.2.1 - cgmckeever - Better alarms configuration definitions
 1.2.0 - cgmckeever - Added user-configurable flow detection and alarming.
-1.1.2 - robertcraft - Change usage attributes to Number 
+1.1.2 - robertcraft - Change usage attributes to Number
 1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
 1.1.0 - tomw - Added PresenceSensor to represent away_mode status.
 1.0.2 - tomw - User feedback: improved notification handling.
@@ -73,8 +74,8 @@ preferences
     }
     section
     {
-        input "flowAlarmTrigger", "number", title: "Count of consecutive flow readings to trigger alarm (0 to disable).  Note: one reading per refresh interval when flow is detected.", defaultValue: 45, required: true
-        input "flowAlarmLookback", "number", title: "How many minutes to look back to identify a consecutive flow reading?", defaultValue: 5, required: true
+        input "flowAlarmTrigger", "number", title: "Alarm Trigger: Number of data refreshes where flow is observed anytime within the Flow Lookback (0 to disable).", defaultValue: 45, required: true
+        input "flowAlarmLookback", "number", title: "Flow Lookback: How many minutes to look back to identify a consecutive flow reading?", defaultValue: 5, required: true
     }
     section
     {
@@ -323,7 +324,7 @@ def queryDevice()
 
     // make sure to check for missing setting (pre-1.2.0 update)
     flowAlarmLookback = flowAlarmLookback ?: 5
-    
+
     alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
     qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN", group_multiplier: flowAlarmLookback]
 
