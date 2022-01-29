@@ -18,13 +18,12 @@ limitations under the License.
 
 Change history:
 
-1.2.0 - cgmckeever - Added user-configurable flow detection and alarming.
-1.1.2 - robertcraft - Change usage attributes to Number 
-1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
-1.1.0 - tomw - Added PresenceSensor to represent away_mode status.
-1.0.2 - tomw - User feedback: improved notification handling.
-1.0.1 - tomw - Improved next Refresh scheduling for better reliability.
-1.0.0 - tomw - Initial release.
+1.1.2 - @robertcraft - Change usage attributes to Number 
+1.1.1 - @tomw - Better handling for notifications when old notifications were deleted by the Flume app.
+1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.
+1.0.2 - @tomw - User feedback: improved notification handling.
+1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.
+1.0.0 - @tomw - Initial release.
 
 */
 
@@ -41,18 +40,15 @@ metadata
         command "setAwayMode"
         command "clearAwayMode"
         command "clearWetStatus"
-        command "testWetStatus"
-
+        
         attribute "commStatus", "string"
-
+        
         attribute "usageLastMinute", "number"
         attribute "usageLastHour", "number"
         attribute "usageLastDay", "number"
         attribute "usageLastWeek", "number"
         attribute "usageLastMonth", "number"
-
-        attribute "continuousFlowReadings", "number"
-
+        
         attribute "notificationStream", "string"
     }
 }
@@ -70,31 +66,16 @@ preferences
     {
         input name: "slidingWindow", type: "bool", title: "Use sliding time windows for usage? (turn off to mirror behavior in Flume app)", defaultValue: false
         input "refreshInterval", "number", title: "Refresh interval (minutes)", defaultValue: 2, required: true
-    }
-    section
-    {
-        input "flowAlarmTrigger", "number", title: "Count of consecutive flow readings to trigger alarm (0 to disable).  Note: one reading per refresh interval when flow is detected.", defaultValue: 45, required: true
-        input "flowAlarmLookback", "number", title: "How many minutes to look back to identify a consecutive flow reading?", defaultValue: 5, required: true
-    }
-    section
-    {
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
     }
 }
 
-def logDebug(msg)
+def logDebug(msg) 
 {
     if (logEnable)
     {
         log.debug(msg)
     }
-}
-
-def errorLine(error)
-{
-    String str= error.getStackTrace().toString()
-    def pattern = ( str =~ /groovy.(\d+)./  )
-    return pattern[0][1]
 }
 
 def updated()
@@ -105,29 +86,28 @@ def updated()
 def configure()
 {
     sendEvent(name: "commStatus", value: "unknown")
-
+    
     try
     {
         state.clear()
-
+        
         getTokens()
         fetchDevices()
         fetchLocations()
-
+        
         setAlertCount(0)
-
+        
         initialize(false)
-
+        
         sendEvent(name: "commStatus", value: "good")
     }
     catch (Exception e)
     {
-        errorLine = errorLine(e)
-        log.error("error: ${e.message} @ Line: ${errorLine}")
+        logDebug("error: ${e.message}")
         //logDebug("status = ${e.getResponse()?.getStatus()}")
-
+        
         sendEvent(name: "commStatus", value: "error")
-    }
+    }    
 }
 
 def initialize()
@@ -141,9 +121,9 @@ def initialize(doGetTokens)
     {
         getTokens()
     }
-
+        
     clearWetStatus()
-    refresh()
+    refresh()    
 }
 
 def refresh()
@@ -151,23 +131,22 @@ def refresh()
     try
     {
         unschedule(refresh)
-
+        
         queryDevice()
         fetchUsageAlerts()
         fetchNotifications()
         fetchLocations()
-
+        
         sendEvent(name: "commStatus", value: "good")
     }
     catch (Exception e)
     {
-        errorLine = errorLine(e)
-        log.error("error: ${e.message} @ Line: ${errorLine}")
-        //log.error("status = ${e.getResponse()?.getStatus()}")
-
+        logDebug("error: ${e.message}")
+        //logDebug("status = ${e.getResponse()?.getStatus()}")
+        
         sendEvent(name: "commStatus", value: "error")
     }
-
+    
     // always schedule next refresh
     runIn((60 * refreshInterval).toFloat().toInteger(), refresh)
 }
@@ -176,7 +155,7 @@ def getTokens()
 {
     def resp = httpExec("POST", genParamsTokens("get"), true)?.data
     logDebug("getTokens resp = ${resp}")
-
+    
     updateAuthTokensStore(resp)
 }
 
@@ -184,8 +163,8 @@ def refreshTokens()
 {
     def resp = httpExec("POST", genParamsTokens("refresh"), true)?.data
     logDebug("refreshTokens resp = ${resp}")
-
-    updateAuthTokensStore(resp)
+    
+    updateAuthTokensStore(resp)    
 }
 
 def fetchDevices()
@@ -193,7 +172,7 @@ def fetchDevices()
     def queryString = "?user=false&location=false"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/devices/${queryString}"), true)?.data
     logDebug("fetchDevices resp = ${resp}")
-
+    
     if(resp)
     {
         setDevices(resp.data)
@@ -205,7 +184,7 @@ def fetchLocations()
     def queryString = "?limit=50&offset=0&sort_field=id&sort_direction=ASC&list_shared=false"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/locations/${queryString}"), true)?.data
     logDebug("fetchLocations resp = ${resp}")
-
+    
     if(resp)
     {
         setLocations(resp.data)
@@ -218,37 +197,37 @@ def fetchNotifications()
     def queryString = "?limit=1000&sort_direction=ASC&flume_leak=true"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/notifications/${queryString}"), true)?.data
     logDebug("fetchNotifications resp = ${resp}")
-
+    
     if(resp?.data)
     {
         def tempCount = getNotifCount() ?: 0
-
+        
         if(resp.data.size() >= tempCount)
         {
-            // this is a typical state;
+            // this is a typical state; 
             //   there are at least as many notifications as we think we already have read
-
+            
             // hack the known ones off of the beginning, then process the rest
             for(i = 0; i < tempCount; i++)
             {
                 resp.data.remove(0)
-            }
+            }            
         }
         else
         {
             // less are in the notification than we think we already have read,
             //  so they must have been cleared in the app
-
+            
             // reset count and process them all to catch up
             tempCount = 0
         }
-
+        
         for(notification in resp.data)
         {
             tempCount++
-
+            
             sendEvent(name: "notificationStream", value: "[${notification.created_datetime}]: ${notification.message}", isStateChange: true)
-
+            
             // short pause to try to keep them sequential in the event log
             pauseExecution(10)
         }
@@ -269,36 +248,25 @@ def getNotifCount()
 def fetchUsageAlerts()
 {
     def tempCount = getAlertCount() ?: 0
-
+    
     def queryString = "?limit=100&offset=${tempCount}&sort_direction=ASC&flume_leak=true"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/usage-alerts/${queryString}"), true)?.data
     logDebug("fetchUsageAlerts resp = ${resp}")
-
+    
     if(resp.data)
     {
         for(alert in resp.data)
         {
             tempCount++
-
-            // check for Flume Smart Leak alerts
+                
+            // check for Flume Smart Leak alerts            
             if(true == alert.flume_leak)
             {
                 sendEvent(name: "water", value: "wet")
             }
-        }
+        }        
         setAlertCount(tempCount)
-    }
-}
-
-def setLastPollTS()
-{
-    state.lastPollTS = new Date().getTime()
-}
-
-def getLastPollTS()
-{
-    lastPoll = state.lastPollTS == null ? 0 : state.lastPollTS.toInteger()
-    return lastPoll
+    }    
 }
 
 def setAlertCount(count)
@@ -315,26 +283,19 @@ def queryDevice()
 {
     def now = new Date()
     def wkMult = 7
-
-    def nowMin, minAgo, hourAgo, yesterday, lastWeek, lastMonth, alertLookback
-    def qMin, qHour, qDay, qWeek, qMonth, qAlertLookback
-
-    nowMin = now.format('yyyy-MM-dd HH:mm:00')
-
-    // make sure to check for missing setting (pre-1.2.0 update)
-    flowAlarmLookback = flowAlarmLookback ?: 5
     
-    alertLookback = new Date(now.getTime() - (flowAlarmLookback * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
-    qAlertLookback = [request_id: "alertLookback", since_datetime: alertLookback, until_datetime: nowMin, bucket: "MIN", group_multiplier: flowAlarmLookback]
-
+    def nowMin, minAgo, hourAgo, yesterday, lastWeek, lastMonth
+    def qMin, qHour, qDay, qWeek, qMonth
+    
     if(slidingWindow)
     {
+        nowMin = now.format('yyyy-MM-dd HH:mm:00')
         minAgo = new Date(now.getTime() - (60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         hourAgo = new Date(now.getTime() - (60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         lastWeek = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).format('yyyy-MM-dd HH:mm:00')
         lastMonth = new Date(now.getTime() - ((30 * 24 * 60 * 60 * 1000) & 0xffffffffL)).format('yyyy-MM-dd HH:mm:00')
-
+        
         qMin = [request_id: "lastMin", since_datetime: minAgo, until_datetime: nowMin, bucket: "MIN"]
         qHour = [request_id: "lastHour", since_datetime: hourAgo, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60]
         qDay = [request_id: "lastDay", since_datetime: yesterday, until_datetime: nowMin, bucket: "MIN", group_multiplier: 60 * 24]
@@ -343,12 +304,13 @@ def queryDevice()
     }
     else
     {
+        nowMin = now.format('yyyy-MM-dd HH:mm:00')
         // MIN doesn't respond for a minute in progress, so go one minute ago for real
         minAgo = new Date(now.getTime() - 60000).format('yyyy-MM-dd HH:mm:00')
         hourAgo = new Date(now.getTime()).format('yyyy-MM-dd HH:00:00')
         yesterday = new Date(now.getTime()).format('yyyy-MM-dd 00:00:00')
         lastMonth = new Date(now.getTime()).format('yyyy-MM-01 00:00:00')
-
+        
         // temp value, need to round to Sunday
         def lastWeekRaw = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000))
         def i = 0
@@ -363,16 +325,16 @@ def queryDevice()
                 found = true
             }
         }
-
+        
         qMin = [request_id: "lastMin", since_datetime: minAgo, until_datetime: nowMin, bucket: "MIN"]
         qHour = [request_id: "lastHour", since_datetime: hourAgo, until_datetime: nowMin, bucket: "HR"]
         qDay = [request_id: "lastDay", since_datetime: yesterday, until_datetime: nowMin, bucket: "DAY"]
         qWeek = [request_id: "lastWeek", since_datetime: lastWeek, until_datetime: nowMin, bucket: "DAY", group_multiplier: wkMult]
         qMonth = [request_id: "lastMonth", since_datetime: lastMonth, until_datetime: nowMin, bucket: "MON"]
     }
-
-    def query = new groovy.json.JsonOutput().toJson([queries: [qMin, qHour, qDay, qWeek, qMonth, qAlertLookback]])
-
+    
+    def query = new groovy.json.JsonOutput().toJson([queries: [qMin, qHour, qDay, qWeek, qMonth]])
+    
     def resp = httpExec("POST", genParamsMain("users/${getUserId()}/devices/${getDevices()[0]?.id}/query", query), true)?.data
     if(resp)
     {
@@ -382,27 +344,6 @@ def queryDevice()
         sendEvent(name: "usageLastDay", value: (resp.data[0]?.lastDay && (resp.data[0]?.lastDay?.size() > 0)) ? resp.data[0].lastDay.getAt(resp.data[0].lastDay.size() - 1)?.value?.toFloat().round(2) : "n/a")
         sendEvent(name: "usageLastWeek", value: (resp.data[0]?.lastWeek && (resp.data[0]?.lastWeek?.size() > 0)) ? resp.data[0].lastWeek.getAt(resp.data[0].lastWeek.size() - 1)?.value?.toFloat().round(2) : "n/a")
         sendEvent(name: "usageLastMonth", value: (resp.data[0]?.lastMonth && (resp.data[0]?.lastMonth?.size() > 0)) ? resp.data[0].lastMonth.getAt(resp.data[0].lastMonth.size() - 1)?.value?.toFloat().round(2) : "n/a")
-
-        lastFlowTS = getLastPollTS()
-        setLastPollTS()
-        currentFlowTS = getLastPollTS()
-
-        lookbackFlow = (resp.data[0]?.alertLookback && (resp.data[0]?.alertLookback?.size() > 0) && resp.data[0].alertLookback.getAt(resp.data[0].alertLookback.size() - 1)?.value?.toFloat() > 0) ? true : false
-        pollWindow = (currentFlowTS - lastFlowTS)/60000
-        if(pollWindow <= flowAlarmLookback && lookbackFlow)
-        {
-            continuousFlowReading = device.currentValue("continuousFlowReadings") == null ? 1 : device.currentValue("continuousFlowReadings") + 1
-            sendEvent(name: "continuousFlowReadings", value: continuousFlowReading)
-
-            if (flowAlarmTrigger > 0 && continuousFlowReading >= flowAlarmTrigger)
-            {
-                sendEvent(name: "water", value: "wet")
-            }
-        }
-        else
-        {
-            sendEvent(name: "continuousFlowReadings", value: 0)
-        }
     }
 }
 
@@ -425,11 +366,6 @@ def clearAwayMode()
 def clearWetStatus()
 {
     sendEvent(name: "water", value: "dry")
-}
-
-def testWetStatus()
-{
-    sendEvent(name: "water", value: "wet")
 }
 
 def genParamsTokens(op)
