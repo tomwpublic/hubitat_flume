@@ -153,8 +153,7 @@ def refresh()
     {
         unschedule(refresh)
 
-        resp = queryDevice()
-        processQueryRespone(resp)
+        processQueryResponse(queryDevice())
 
         fetchUsageAlerts()
         fetchNotifications()
@@ -399,7 +398,7 @@ def queryDevice()
     return resp
 }
 
-def processQueryRespone(resp)
+def processQueryResponse(resp)
 {
     if(resp)
     {
@@ -433,7 +432,8 @@ def processQueryRespone(resp)
             if (refreshFlow)
             {
                 status = "running"
-            } else
+            }
+            else
             {
                 status = "monitoring"
             }
@@ -446,13 +446,15 @@ def processQueryRespone(resp)
             runTime = Math.round((currentFlowTS - flowDetectedTS)/600)/100
             sendEvent(name: "flowDurationDetail", value: status + " for " + runTime.toString() + " min")
             sendEvent(name: "flowDurationMin", value: runTime)
-        } else
+        }
+        else
         {
             if (flowStatus != "stopped")
             {
                 if (flowStatus == null) {
                     sendEvent(name: "flowDurationDetail", value: "waiting for first flow detection")
-                } else
+                }
+                else
                 {
                     runTime = Math.round((currentFlowTS - flowDetectedTS)/600)/100
                     sendEvent(name: "flowDurationDetail", value: "Ran " + (runTime - (flowLookbackTime - refreshInterval)).toString() + " min")
