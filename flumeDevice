@@ -75,7 +75,7 @@ preferences
     }
     section
     {
-        input "flowLookbackTime", "number", title: "Number of minutes to look back to identify a continuos flow reading", defaultValue: 3, required: true
+        input "flowLookbackTime", "number", title: "Period of time to analyze when determining flow state. (Minutes)", defaultValue: 3, required: true
     }
     section
     {
