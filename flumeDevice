@@ -439,7 +439,7 @@ def queryDevice()
             if (flowStatus != "stopped")
             {
                 if (flowStatus == null) {
-                    sendEvent(name: "flowDurationDetail", value: "flow monitoring initialzing")
+                    sendEvent(name: "flowDurationDetail", value: "waiting for first flow detection")
                 } else
                 {
                     runTime = Math.round((currentFlowTS - flowDetectedTS)/600)/100
