@@ -153,7 +153,9 @@ def refresh()
     {
         unschedule(refresh)
 
-        queryDevice()
+        resp = queryDevice()
+        processQueryRespone(resp)
+
         fetchUsageAlerts()
         fetchNotifications()
         fetchLocations()
@@ -388,6 +390,17 @@ def queryDevice()
     def query = new groovy.json.JsonOutput().toJson([queries: [qMin, qHour, qDay, qWeek, qMonth, qFlowLookback, qFlowRefresh]])
 
     def resp = httpExec("POST", genParamsMain("users/${getUserId()}/devices/${getDevices()[0]?.id}/query", query), true)?.data
+
+    if(resp)
+    {
+        setLastPollTS()
+    }
+
+    return resp
+}
+
+def processQueryRespone(resp)
+{
     if(resp)
     {
         logDebug("${resp.data}")
@@ -400,7 +413,6 @@ def queryDevice()
         lookbackFlow = (resp.data[0]?.flowLookback && (resp.data[0]?.flowLookback?.size() > 0) && resp.data[0].flowLookback.getAt(resp.data[0].flowLookback.size() - 1)?.value?.toFloat() > 0) ? true : false
         refreshFlow = (resp.data[0]?.flowRefresh && (resp.data[0]?.flowRefresh?.size() > 0) && resp.data[0].flowRefresh.getAt(resp.data[0].flowRefresh.size() - 1)?.value?.toFloat() > 0) ? true : false
 
-        setLastPollTS()
         currentFlowTS = getLastPollTS()
         flowDetectedTS = getFlowDetectedTS()
         flowStatus = device.currentValue("flowStatus")
