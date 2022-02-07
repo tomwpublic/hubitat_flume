@@ -51,7 +51,6 @@ metadata
         attribute "usageLastWeek", "number"
         attribute "usageLastMonth", "number"
 
-        attribute "flowDurationDetail", "string"
         attribute "flowDurationMin", "number"
         attribute "flowStatus", "string"
 
@@ -444,21 +443,19 @@ def processQueryResponse(resp)
             }
 
             runTime = Math.round((currentFlowTS - flowDetectedTS)/600)/100
-            sendEvent(name: "flowDurationDetail", value: status + " for " + runTime.toString() + " min")
             sendEvent(name: "flowDurationMin", value: runTime)
         }
         else
         {
             if (flowStatus != "stopped")
             {
-                if (flowStatus == null) {
-                    sendEvent(name: "flowDurationDetail", value: "waiting for first flow detection")
-                }
-                else
+                if (flowStatus != null)
                 {
                     runTime = Math.round((currentFlowTS - flowDetectedTS)/600)/100
-                    sendEvent(name: "flowDurationDetail", value: "Ran " + (runTime - (flowLookbackTime - refreshInterval)).toString() + " min")
-                    logDebug(">>>>>>>>>>>>> endFlowWatch: ${currentFlowTS}")
+                    finalRunTime = runTime - (flowLookbackTime - refreshInterval)
+                    logDebug(">>>>>>>>>>>>> startFlowWatch: ${flowDetectedTS}")
+                    logDebug("              endFlowWatch: ${currentFlowTS}")
+                    logDebug("              runTime: ${finalRunTime}")
                 }
                 sendEvent(name: "flowDurationMin", value: 0)
                 sendEvent(name: "flowStatus", value: "stopped")
