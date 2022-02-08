@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.2.1 - cgmckeever - refresh device state after setting away mode
 1.2.0 - cgmckeever - Added current flow time to allow custom reporting/rules/triggering
 1.1.2 - robertcraft - Change usage attributes to Number
 1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
@@ -468,6 +469,7 @@ def setAwayMode(away)
 {
     def body = new groovy.json.JsonOutput().toJson([away_mode: away])
     httpExec("PATCH", genParamsMain("users/${getUserId()}/locations/${getLocations()[0]?.id}", body), true)?.data
+    refresh()
 }
 
 def setAwayMode()
