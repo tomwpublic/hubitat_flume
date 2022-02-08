@@ -18,7 +18,7 @@ limitations under the License.
 
 Change history:
 
-1.2.0 - cgmckeever - Added flow time and lookback.
+1.2.0 - cgmckeever - Added current flow time to allow custom reporting/rules/triggering
 1.1.2 - robertcraft - Change usage attributes to Number
 1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
 1.1.0 - tomw - Added PresenceSensor to represent away_mode status.
