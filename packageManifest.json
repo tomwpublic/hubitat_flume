@@ -1,7 +1,7 @@
 {
   "packageName": "hubitat_flume",
   "author": "tomw",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2021-02-01",
   "drivers": [
@@ -14,7 +14,7 @@
     }
   ],
   "licenseFile": "https://raw.githubusercontent.com/tomwpublic/hubitat_flume/main/LICENSE",
-  "releaseNotes": "1.1.2 - @robertcraft - Change usage attributes to Number\n1.1.1 - @tomw - Better handling for notifications when old notifications were deleted by the Flume app.\n1.1.0 - @tomw - Added PresenceSensor to represent away_mode status.\n1.0.2 - @tomw - User feedback: improved notification handling.\n1.0.1 - @tomw - Improved next Refresh scheduling for better reliability.\n1.0.0 - @tomw - Initial release.",
+  "releaseNotes": "1.2.0 - cgmckeever - Added current flow time to allow custom reporting/rules/triggering\n,1.1.2 - robertcraft - Change usage attributes to Number\n1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.\n1.1.0 - tomw - Added PresenceSensor to represent away_mode status.\n1.0.2 - tomw - User feedback: improved notification handling.\n1.0.1 - tomw - Improved next Refresh scheduling for better reliability.\n1.0.0 - tomw - Initial release.",
   "documentationLink": "https://github.com/tomwpublic/hubitat_flume/blob/main/README.md",
   "communityLink": "https://community.hubitat.com/t/flume-integration/19149/36"
 }
