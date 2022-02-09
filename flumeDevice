@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+1.2.1 - tomw - Misc. improvements: more responsive Away Mode status; ignoring stale notifications and alerts
 1.2.0 - cgmckeever - Added current flow time to allow custom reporting/rules/triggering
 1.1.2 - robertcraft - Change usage attributes to Number
 1.1.1 - tomw - Better handling for notifications when old notifications were deleted by the Flume app.
@@ -222,7 +223,8 @@ def fetchNotifications()
 
     if(resp?.data)
     {
-        def tempCount = getNotifCount() ?: 0
+        def tempCount = getNotifCount() ?: 0        
+        def processingStale = (tempCount == 0)
 
         if(resp.data.size() >= tempCount)
         {
@@ -247,12 +249,16 @@ def fetchNotifications()
         for(notification in resp.data)
         {
             tempCount++
-
-            sendEvent(name: "notificationStream", value: "[${notification.created_datetime}]: ${notification.message}", isStateChange: true)
-
+                
+            if(!processingStale)
+            {
+                sendEvent(name: "notificationStream", value: "[${notification.created_datetime}]: ${notification.message}", isStateChange: true)
+            }
+            
             // short pause to try to keep them sequential in the event log
             pauseExecution(10)
         }
+        
         setNotifCount(tempCount)
     }
 }
@@ -270,6 +276,7 @@ def getNotifCount()
 def fetchUsageAlerts()
 {
     def tempCount = getAlertCount() ?: 0
+    def processingStale = (tempCount == 0)
 
     def queryString = "?limit=100&offset=${tempCount}&sort_direction=ASC&flume_leak=true"
     def resp = httpExec("GET", genParamsMain("users/${getUserId()}/usage-alerts/${queryString}"), true)?.data
@@ -284,7 +291,10 @@ def fetchUsageAlerts()
             // check for Flume Smart Leak alerts
             if(true == alert.flume_leak)
             {
-                setWetStatus()
+                if(!processingStale)
+                {
+                    setWetStatus()
+                }
             }
         }
         setAlertCount(tempCount)
@@ -468,6 +478,11 @@ def setAwayMode(away)
 {
     def body = new groovy.json.JsonOutput().toJson([away_mode: away])
     httpExec("PATCH", genParamsMain("users/${getUserId()}/locations/${getLocations()[0]?.id}", body), true)?.data
+    pauseExecution(1000)
+    
+    // do a partial refresh to get updated home/away status, 
+    //   so we don't have to wait for the refreshInterval to expire
+    fetchLocations()
 }
 
 def setAwayMode()
