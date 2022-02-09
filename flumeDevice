@@ -289,12 +289,9 @@ def fetchUsageAlerts()
             tempCount++
 
             // check for Flume Smart Leak alerts
-            if(true == alert.flume_leak)
+            if(!processingStale && (alert.flume_leak == true))
             {
-                if(!processingStale)
-                {
-                    setWetStatus()
-                }
+                setWetStatus()
             }
         }
         setAlertCount(tempCount)
