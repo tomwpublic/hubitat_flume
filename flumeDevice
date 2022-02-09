@@ -469,7 +469,11 @@ def setAwayMode(away)
 {
     def body = new groovy.json.JsonOutput().toJson([away_mode: away])
     httpExec("PATCH", genParamsMain("users/${getUserId()}/locations/${getLocations()[0]?.id}", body), true)?.data
-    refresh()
+    pauseExecution(1000)
+
+    // do a partial refresh to get updated home/away status,
+    //   so we don't have to wait for the refreshInterval to expire
+    fetchLocations()
 }
 
 def setAwayMode()
